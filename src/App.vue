@@ -1,0 +1,89 @@
+<template>
+	<div id="app">
+		<h1>To Do List - Vue</h1>
+		<TasksProgress :progress="progress" />
+		<NewTask @taskAdded="addTask" />
+		<TaskGrid :tasks="tasks"
+			@taskDeleted="deleteTask" 
+			@taskStateChanged="toggleTaskState" />
+	</div>
+</template>
+
+<script>
+import TasksProgress from './components/TasksProgress.vue'
+import TaskGrid from './components/TaskGrid.vue'
+import NewTask from './components/NewTask.vue'
+
+export default {
+	components:{ TaskGrid, NewTask, TasksProgress },
+	data() {
+		return {
+			tasks: []
+		}
+	},
+	computed: {
+		progress(){
+			const total = this.tasks.length
+			const done = this.tasks.filter(t => !t.status).length
+			return Math.round(done / total * 100) || 0
+		}
+	},
+	watch: {
+		tasks: {
+			deep: true,
+			handler() {
+				localStorage.setItem('tasks', JSON.stringify(this.tasks))
+			}
+		}
+	},
+	methods: {
+		addTask(task){
+			const sameName = t => t.name === task.name
+			const reallyNew = this.tasks.filter(sameName).length == 0
+
+			if (reallyNew){
+				this.tasks.push({
+					name: task.name,
+					status: task.status || true
+				})
+			}
+		},
+		deleteTask(i) {
+			this.tasks.splice(i, 1)
+		},
+		toggleTaskState(i){
+			this.tasks[i].status = !this.tasks[i].status
+			console.log(this.tasks[i].status)
+		}
+	},
+	created() {
+		const json = localStorage.getItem('tasks')
+		const array = JSON.parse(json)
+		this.tasks = Array.isArray(array) ? array : []
+	}
+
+}
+</script>
+
+<style>
+	body {
+		font-family: 'Lato', sans-serif;
+		background: linear-gradient(to right, #5C258D, #4389A2);
+		color: #FFF;
+	}
+
+	#app {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		height: 100vh;
+	}
+
+	#app h1 {
+		margin-bottom: 5px;
+		font-weight: 300;
+		font-size: 3rem;
+	}
+</style>
